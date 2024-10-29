@@ -26,7 +26,7 @@ public class BatchConfig {
     }
 
     @Bean
-    public Job job1(JobRepository jobRepository, Step step, PlatformTransactionManager transactionManager) {
+    public Job firstJob(JobRepository jobRepository, Step step, PlatformTransactionManager transactionManager) {
         return new JobBuilder("job1", jobRepository).start(step1(jobRepository, printHelloTask, transactionManager))
                                                     .build();
     }
