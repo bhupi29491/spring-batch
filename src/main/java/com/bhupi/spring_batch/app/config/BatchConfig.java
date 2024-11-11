@@ -67,6 +67,34 @@ public class BatchConfig {
     }
 
     @Bean
+    public Step step5(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step5", jobRepository).tasklet((contribution, chunkContext) -> {
+                                                          boolean isFailure = true;
+                                                          if (isFailure) {
+                                                              throw new Exception("Test Exception");
+                                                          }
+                                                          System.out.println("Step5 is executed..!!");
+                                                          return RepeatStatus.FINISHED;
+                                                      }, transactionManager)
+                                                      .build();
+    }
+
+    @Bean
+    public Step step6(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step6", jobRepository).tasklet((contribution, chunkContext) -> {
+                                                          System.out.println("Step6 is executed..!!");
+                                                          return RepeatStatus.FINISHED;
+                                                      }, transactionManager)
+                                                      .build();
+    }
+
+    @Bean
+    public Step job3Step(JobRepository jobRepository, Job job3) {
+        return new StepBuilder("job3Step", jobRepository).job(job3)
+                                                         .build();
+    }
+
+    @Bean
     public Flow flow1(Step step3, Step step4) {
         FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("flow1");
         flowBuilder.start(step3)
@@ -92,12 +120,37 @@ public class BatchConfig {
 
 
     @Bean
-    public Job firstJob(JobRepository jobRepository, PlatformTransactionManager transactionManager, Step step1, Step step2, Flow flow1) throws Exception {
+    public Job job1(JobRepository jobRepository, Step step1, Step step2, Flow flow1) throws Exception {
         return new JobBuilder("job1", jobRepository).start(step1)
                                                     .next(step2)
                                                     .on("COMPLETED")
                                                     .to(flow1)
                                                     .end()
+                                                    .build();
+    }
+
+//    @Bean
+//    public Job secondJob(JobRepository jobRepository, Step step5, Step step6, Flow flow1) throws Exception {
+//        return new JobBuilder("job2", jobRepository).start(flow1)
+//                                                    .next(step5)
+//                                                    .next(step6)
+//                                                    .end()
+//                                                    .build();
+//    }
+
+
+    @Bean
+    public Job job2(JobRepository jobRepository, Step job3Step, Flow flow1) throws Exception {
+        return new JobBuilder("job2", jobRepository).start(flow1)
+                                                    .next(job3Step)
+                                                    .end()
+                                                    .build();
+    }
+
+    @Bean
+    public Job job3(JobRepository jobRepository, Step step5, Step step6) throws Exception {
+        return new JobBuilder("job3", jobRepository).start(step5)
+                                                    .next(step6)
                                                     .build();
     }
 

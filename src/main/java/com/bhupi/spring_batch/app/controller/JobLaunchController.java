@@ -12,12 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class JobLaunchController {
 
-    private JobLauncher jobLauncher;
+    private final JobLauncher jobLauncher;
+    private final Job job;
 
-    @Qualifier("firstJob")
-    private Job job;
-
-    public JobLaunchController(JobLauncher jobLauncher, Job job) {
+    public JobLaunchController(JobLauncher jobLauncher, @Qualifier("job2") Job job) {
         this.jobLauncher = jobLauncher;
         this.job = job;
     }
@@ -27,7 +25,6 @@ public class JobLaunchController {
 
         JobParameters jobParameters = new JobParametersBuilder().addString("param", id)
                                                                 .toJobParameters();
-
         jobLauncher.run(job, jobParameters);
     }
 }
