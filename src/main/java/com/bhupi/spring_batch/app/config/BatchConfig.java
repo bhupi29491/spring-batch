@@ -14,6 +14,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
@@ -32,7 +33,8 @@ public class BatchConfig {
     @Bean
     public Step step1(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("step1", jobRepository).tasklet((contribution, chunkContext) -> {
-                                                          System.out.println("Step1 is executed..!!");
+                                                          System.out.println("Step1 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
                                                       .build();
@@ -41,7 +43,8 @@ public class BatchConfig {
     @Bean
     public Step step2(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("step2", jobRepository).tasklet((contribution, chunkContext) -> {
-                                                          System.out.println("Step2 is executed..!!");
+                                                          System.out.println("Step2 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
 //                                                      .listener(myStepExecutionListener())
@@ -51,7 +54,8 @@ public class BatchConfig {
     @Bean
     public Step step3(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("step3", jobRepository).tasklet((contribution, chunkContext) -> {
-                                                          System.out.println("Step3 is executed..!!");
+                                                          System.out.println("Step3 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
                                                       .build();
@@ -60,7 +64,8 @@ public class BatchConfig {
     @Bean
     public Step step4(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("step4", jobRepository).tasklet((contribution, chunkContext) -> {
-                                                          System.out.println("Step4 is executed..!!");
+                                                          System.out.println("Step4 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
                                                       .build();
@@ -69,11 +74,12 @@ public class BatchConfig {
     @Bean
     public Step step5(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("step5", jobRepository).tasklet((contribution, chunkContext) -> {
-                                                          boolean isFailure = true;
+                                                          boolean isFailure = false;
                                                           if (isFailure) {
                                                               throw new Exception("Test Exception");
                                                           }
-                                                          System.out.println("Step5 is executed..!!");
+                                                          System.out.println("Step5 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
                                                       .build();
@@ -82,7 +88,28 @@ public class BatchConfig {
     @Bean
     public Step step6(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("step6", jobRepository).tasklet((contribution, chunkContext) -> {
-                                                          System.out.println("Step6 is executed..!!");
+                                                          System.out.println("Step6 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
+                                                          return RepeatStatus.FINISHED;
+                                                      }, transactionManager)
+                                                      .build();
+    }
+
+    @Bean
+    public Step step7(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step7", jobRepository).tasklet((contribution, chunkContext) -> {
+                                                          System.out.println("Step7 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
+                                                          return RepeatStatus.FINISHED;
+                                                      }, transactionManager)
+                                                      .build();
+    }
+
+    @Bean
+    public Step step8(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step8", jobRepository).tasklet((contribution, chunkContext) -> {
+                                                          System.out.println("Step8 is executed on thread :: " + Thread.currentThread()
+                                                                                                                       .getName());
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
                                                       .build();
@@ -103,9 +130,34 @@ public class BatchConfig {
         return flowBuilder.build();
     }
 
+    @Bean
+    public Flow flow2(Step step5, Step step6) {
+        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("flow2");
+        flowBuilder.start(step5)
+                   .next(step6)
+                   .end();
+        return flowBuilder.build();
+    }
+
+    @Bean
+    public Flow flow3(Step step7, Step step8) {
+        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("flow3");
+        flowBuilder.start(step7)
+                   .next(step8)
+                   .end();
+        return flowBuilder.build();
+    }
+
+    @Bean
+    public Flow splitFlow(Flow flow1, Flow flow2, Flow flow3) {
+        return new FlowBuilder<Flow>("splitFlow").split(new SimpleAsyncTaskExecutor())
+                                                 .add(flow1, flow2, flow3)
+                                                 .build();
+    }
+
 
 //    @Bean
-//    public Job firstJob(JobRepository jobRepository, PlatformTransactionManager transactionManager) throws Exception {
+//    public Job job1(JobRepository jobRepository, PlatformTransactionManager transactionManager) throws Exception {
 //        return new JobBuilder("job1", jobRepository).start(step1(jobRepository, transactionManager))
 //                                                    .on("COMPLETED")
 //                                                    .to(jobExecutionDecider())
@@ -140,9 +192,8 @@ public class BatchConfig {
 
 
     @Bean
-    public Job job2(JobRepository jobRepository, Step job3Step, Flow flow1) throws Exception {
-        return new JobBuilder("job2", jobRepository).start(flow1)
-                                                    .next(job3Step)
+    public Job job2(JobRepository jobRepository, Step job3Step, Flow splitFlow) throws Exception {
+        return new JobBuilder("job2", jobRepository).start(splitFlow)
                                                     .end()
                                                     .build();
     }
