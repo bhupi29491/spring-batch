@@ -11,6 +11,7 @@ import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.JobExecutionDecider;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +41,12 @@ public class BatchConfig {
         return new StepBuilder("step1", jobRepository).tasklet((contribution, chunkContext) -> {
                                                           System.out.println("Step1 is executed on thread :: " + Thread.currentThread()
                                                                                                                        .getName());
+                                                          ExecutionContext jobExecutionContext = chunkContext.getStepContext()
+                                                                                                             .getStepExecution()
+                                                                                                             .getJobExecution()
+                                                                                                             .getExecutionContext();
+                                                          System.out.println("Job Execution Context: " + jobExecutionContext);
+                                                          jobExecutionContext.put("sk1", "ABC");
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
                                                       .build();
@@ -50,6 +57,12 @@ public class BatchConfig {
         return new StepBuilder("step2", jobRepository).tasklet((contribution, chunkContext) -> {
                                                           System.out.println("Step2 is executed on thread :: " + Thread.currentThread()
                                                                                                                        .getName());
+                                                          ExecutionContext jobExecutionContext = chunkContext.getStepContext()
+                                                                                                             .getStepExecution()
+                                                                                                             .getJobExecution()
+                                                                                                             .getExecutionContext();
+                                                          System.out.println("Job Execution Context: " + jobExecutionContext);
+                                                          jobExecutionContext.put("sk2", "KLM");
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
 //                                                      .listener(myStepExecutionListener())
@@ -61,6 +74,11 @@ public class BatchConfig {
         return new StepBuilder("step3", jobRepository).tasklet((contribution, chunkContext) -> {
                                                           System.out.println("Step3 is executed on thread :: " + Thread.currentThread()
                                                                                                                        .getName());
+                                                          ExecutionContext jobExecutionContext = chunkContext.getStepContext()
+                                                                                                             .getStepExecution()
+                                                                                                             .getJobExecution()
+                                                                                                             .getExecutionContext();
+                                                          System.out.println("Job Execution Context: " + jobExecutionContext);
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
                                                       .listener(myStepExecutionListener())
@@ -178,12 +196,11 @@ public class BatchConfig {
 
 
     @Bean
-    public Job job1(JobRepository jobRepository, Step step1, Step step2, Flow flow1) throws Exception {
-        return new JobBuilder("job1", jobRepository).start(step1)
+    public Job job1(JobRepository jobRepository, Step step1, Step step2, Step step3) throws Exception {
+        return new JobBuilder("job1", jobRepository).listener(myJobExecutionListener())
+                                                    .start(step1)
                                                     .next(step2)
-                                                    .on("COMPLETED")
-                                                    .to(flow1)
-                                                    .end()
+                                                    .next(step3)
                                                     .build();
     }
 

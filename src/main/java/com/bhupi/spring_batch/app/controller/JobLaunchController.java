@@ -15,7 +15,7 @@ public class JobLaunchController {
     private final JobLauncher jobLauncher;
     private final Job job;
 
-    public JobLaunchController(JobLauncher jobLauncher, @Qualifier("job2") Job job) {
+    public JobLaunchController(JobLauncher jobLauncher, @Qualifier("job1") Job job) {
         this.jobLauncher = jobLauncher;
         this.job = job;
     }
