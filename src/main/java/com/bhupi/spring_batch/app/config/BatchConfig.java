@@ -5,7 +5,6 @@ import com.bhupi.spring_batch.app.listener.MyJobExecutionListener;
 import com.bhupi.spring_batch.app.listener.MyStepExecutionListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.flow.Flow;
@@ -32,7 +31,7 @@ public class BatchConfig {
     }
 
     @Bean
-    public StepExecutionListener myStepExecutionListener() {
+    public MyStepExecutionListener myStepExecutionListener() {
         return new MyStepExecutionListener();
     }
 
@@ -64,6 +63,7 @@ public class BatchConfig {
                                                                                                                        .getName());
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
+                                                      .listener(myStepExecutionListener())
                                                       .build();
     }
 
