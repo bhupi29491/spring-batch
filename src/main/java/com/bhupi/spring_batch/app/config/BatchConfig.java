@@ -5,10 +5,12 @@ import com.bhupi.spring_batch.app.listener.MyJobExecutionListener;
 import com.bhupi.spring_batch.app.listener.MyStepExecutionListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.JobExecutionDecider;
+import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ExecutionContext;
@@ -46,9 +48,14 @@ public class BatchConfig {
                                                                                                              .getJobExecution()
                                                                                                              .getExecutionContext();
                                                           System.out.println("Job Execution Context: " + jobExecutionContext);
-                                                          jobExecutionContext.put("sk1", "ABC");
+//                                                          jobExecutionContext.put("sk1", "ABC");
+                                                          ExecutionContext stepExecutionContext = chunkContext.getStepContext()
+                                                                                                              .getStepExecution()
+                                                                                                              .getExecutionContext();
+                                                          stepExecutionContext.put("sk1", "ABC");
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
+                                                      .listener(promoListener())
                                                       .build();
     }
 
@@ -62,10 +69,15 @@ public class BatchConfig {
                                                                                                              .getJobExecution()
                                                                                                              .getExecutionContext();
                                                           System.out.println("Job Execution Context: " + jobExecutionContext);
-                                                          jobExecutionContext.put("sk2", "KLM");
+//                                                          jobExecutionContext.put("sk2", "KLM");
+                                                          ExecutionContext stepExecutionContext = chunkContext.getStepContext()
+                                                                                                              .getStepExecution()
+                                                                                                              .getExecutionContext();
+                                                          stepExecutionContext.put("sk2", "KLM");
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
 //                                                      .listener(myStepExecutionListener())
+                                                      .listener(promoListener())
                                                       .build();
     }
 
@@ -194,6 +206,15 @@ public class BatchConfig {
 //                                                    .build();
 //    }
 
+
+    @Bean
+    public StepExecutionListener promoListener() {
+        ExecutionContextPromotionListener promotionListener = new ExecutionContextPromotionListener();
+        promotionListener.setKeys(new String[]{
+                "sk1",
+                "sk2"});
+        return promotionListener;
+    }
 
     @Bean
     public Job job1(JobRepository jobRepository, Step step1, Step step2, Step step3) throws Exception {
