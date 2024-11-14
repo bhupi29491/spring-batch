@@ -1,6 +1,7 @@
 package com.bhupi.spring_batch.app.config;
 
 import com.bhupi.spring_batch.app.decider.MyJobExecutionDecider;
+import com.bhupi.spring_batch.app.listener.MyJobExecutionListener;
 import com.bhupi.spring_batch.app.listener.MyStepExecutionListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -19,6 +20,11 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 public class BatchConfig {
+
+    @Bean
+    public MyJobExecutionListener myJobExecutionListener() {
+        return new MyJobExecutionListener();
+    }
 
     @Bean
     public JobExecutionDecider jobExecutionDecider() {
@@ -193,7 +199,8 @@ public class BatchConfig {
 
     @Bean
     public Job job2(JobRepository jobRepository, Step job3Step, Flow splitFlow) throws Exception {
-        return new JobBuilder("job2", jobRepository).start(splitFlow)
+        return new JobBuilder("job2", jobRepository).listener(myJobExecutionListener())
+                                                    .start(splitFlow)
                                                     .end()
                                                     .build();
     }
