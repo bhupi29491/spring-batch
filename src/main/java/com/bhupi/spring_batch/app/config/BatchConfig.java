@@ -73,7 +73,7 @@ public class BatchConfig {
                                                           ExecutionContext stepExecutionContext = chunkContext.getStepContext()
                                                                                                               .getStepExecution()
                                                                                                               .getExecutionContext();
-                                                          stepExecutionContext.put("sk2", "KLM");
+                                                          stepExecutionContext.put("sk2", "TUV");
                                                           return RepeatStatus.FINISHED;
                                                       }, transactionManager)
 //                                                      .listener(myStepExecutionListener())
@@ -217,11 +217,20 @@ public class BatchConfig {
     }
 
     @Bean
-    public Job job1(JobRepository jobRepository, Step step1, Step step2, Step step3) throws Exception {
+    public Job job1(JobRepository jobRepository, Step step1, Step step2, Step step3, Step step4, Step step5) throws Exception {
         return new JobBuilder("job1", jobRepository).listener(myJobExecutionListener())
                                                     .start(step1)
                                                     .next(step2)
-                                                    .next(step3)
+                                                    .next(jobExecutionDecider())
+                                                    .on("STEP_3")
+                                                    .to(step3)
+                                                    .from(jobExecutionDecider())
+                                                    .on("STEP_4")
+                                                    .to(step4)
+                                                    .from(jobExecutionDecider())
+                                                    .on("STEP_5")
+                                                    .to(step5)
+                                                    .end()
                                                     .build();
     }
 
